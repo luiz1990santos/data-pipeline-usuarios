@@ -31,7 +31,7 @@ def importar_json_clientes(dados):
 
 
 
-def lista_arquivos():
+def atualizar_processados():
 
     arquivos = os.listdir(cm_clientes)
 
