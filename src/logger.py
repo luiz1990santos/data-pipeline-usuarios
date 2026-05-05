@@ -5,7 +5,7 @@ LOG_DIR = caminho_log()
 
 # Arquivo único por execução
 log_filename = f"{data_arquivo()}.log"
-log_path = os.path.join(LOG_DIR, log_filename)
+log_path = LOG_DIR / log_filename
 
 
 def log(level, message, module):

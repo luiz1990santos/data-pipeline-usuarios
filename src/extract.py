@@ -4,20 +4,11 @@ import os
 from logger import log
 # from .logger import log
 
-api_key = os.getenv("API_KEY")
 
-# api_key = os.environ
-
-#print(api_key)
 
 def conexao_api_clientes():
 
         try:
-            # Chave de acesso e a URL
-            api_key = os.getenv("API_KEY")
-
-            if not api_key:
-                 raise ValueError("API_KEY não definida!")
 
             url = 'https://randomuser.me/api/'
 
@@ -30,7 +21,7 @@ def conexao_api_clientes():
 
             # Config cabeçalho com a chave de API
             headers = {
-                'Authorization': f'Bearer {api_key}',
+                #'Authorization': f'Bearer {api_key}',
                 'Content-Type': 'application/json'
             }
 
@@ -52,13 +43,13 @@ def conexao_api_clientes():
                     
                 else:
                     log("INFO", "Iniciando extração", "extract")
-                    data = response.json()
+                    
             else:
-                data is None 
+                data = None 
                 log("ERROR", "API Sem retorno", "extract")            
         except Exception as e:
-            data
-            f"erro inesperado: {type(e).__name__}, {e}", "extract"
+            log("ERROR", f"Erro inesperado: {type(e).__name__}, {e}", "extract")
+            return None
 
            
 
@@ -73,7 +64,10 @@ def conexao_api_clientes():
 
 
 
-"""    # 6. Verifique se a requisição foi bem-sucedida (status 200)
+"""    
+
+
+    Verifique se a requisição foi bem-sucedida (status 200)
             if response.status_code == 200:
                 # CONDICAO CASO A API NÃO ESTEJA RETORNANDO DADOS 
                 if len(user) == 0:
