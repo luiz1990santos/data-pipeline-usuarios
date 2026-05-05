@@ -3,4 +3,6 @@ __pycache__/
 *.csv
 *.log
 *.json
+data/raw/
+data/processed/
 venv/
