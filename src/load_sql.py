@@ -14,7 +14,7 @@ conexao = pyodbc.connect(
 
 cursor = conexao.cursor()
 
-cursor.execute("SELECT TOP 10 * from BO_2016")
+cursor.execute("SELECT * from STAGING_USERS")
 
 select = cursor.fetchone()
 
