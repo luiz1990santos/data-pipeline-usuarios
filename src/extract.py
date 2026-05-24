@@ -63,26 +63,5 @@ def conexao_api_clientes():
 #print(teste)
 
 
-
-"""    
-
-
-    Verifique se a requisição foi bem-sucedida (status 200)
-            if response.status_code == 200:
-                # CONDICAO CASO A API NÃO ESTEJA RETORNANDO DADOS 
-                if len(user) == 0:
-                    log("WARNING", "API retornou lista vazia", "extract")
-                    
-                else:
-                    log("INFO", "Iniciando extração", "extract")
-                    data = response.json()
-            else:
-                data is None 
-                log("ERROR", "API Sem retorno", "extract")
-
-            
-"""
-
-
 #import sys
 #print(sys.version)
