@@ -9,8 +9,10 @@
 
 -- SP_HELP STAGING_USERS
 
+-- DROP TABLE STAGING_USERS
+
 CREATE TABLE STAGING_USERS(
-    ID VARCHAR(50) PRIMARY KEY, 	
+    ID VARCHAR(50), 	
     first_name VARCHAR(50),	
     last_name VARCHAR(50),	
     gender VARCHAR(50),	
@@ -25,6 +27,7 @@ CREATE TABLE STAGING_USERS(
     date_of_birth VARCHAR(50),	
     age VARCHAR(50),	
     registration_date VARCHAR(50),	
-    regist_age VARCHAR(50)
+    regist_age VARCHAR(50),
+    created_at VARCHAR(50)
 
 ) ;
