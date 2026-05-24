@@ -1,10 +1,12 @@
 import pandas as pd
 import json
-from helpers import caminho_bronze_clientes, data_arquivo
+from helpers import caminho_bronze_clientes, data_arquivo, data_registro
 from logger import log
 
 
 data_arquivo = data_arquivo()
+
+data_registro = data_registro()
 
 caminho_bronze = caminho_bronze_clientes()
 
@@ -40,21 +42,22 @@ def transformacao_clientes(arquivo):
                 "date_of_birth": usuario.get("dob", {}).get("date"),
                 "age": usuario.get("dob", {}).get("age"),
                 "registration_date": usuario.get("registered", {}).get("date"),
-                "regist_age": usuario.get("registered", {}).get("age")
+                "regist_age": usuario.get("registered", {}).get("age"),
+                "created_at": data_registro
             }
 
             usuarios_transformados.append(usuario_transformado)
 
         json_normalizado = pd.json_normalize(usuarios_transformados)
 
-        arquivo_saida = f"{caminho}/{nome_arquivo}-clientes.csv"
+        arquivo_saida = f"{caminho}/{nome_arquivo}-users.csv"
 
         json_normalizado.to_csv(arquivo_saida, index = False)
-        log("INFO", f"Arquivo {data_arquivo}_clientes.csv criado com Sucesso", "transform")
+        log("INFO", f"Arquivo {data_arquivo}-users.csv criado com Sucesso", "transform")
     except Exception as e:
         log("ERROR", f"erro inesperado: {type(e).__name__}, {e}", "transform")       
 
-    return json_normalizado
+    return arquivo_saida
 
 
 
