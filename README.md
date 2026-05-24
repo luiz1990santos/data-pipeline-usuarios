@@ -119,5 +119,7 @@ Melhorias de observabilidade
 
 🎯 Objetivo do Projeto
 
-Este projeto tem como objetivo simular cenários reais de engenharia de dados, evoluindo gradualmente desde pipelines simples até arquiteturas mais robustas e próximas de ambientes produtivos.
+Este projeto tem como objetivo simular cenários reais de engenharia de dados, evoluindo 
+gradualmente desde pipelines simples até arquiteturas mais robustas e próximas de ambientes 
+produtivos.
 
