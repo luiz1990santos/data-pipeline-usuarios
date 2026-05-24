@@ -115,3 +115,9 @@ Idempotência do pipeline
 Modelagem tipada de tabelas analíticas
 Controle de execução do pipeline
 Melhorias de observabilidade
+
+
+🎯 Objetivo do Projeto
+
+Este projeto tem como objetivo simular cenários reais de engenharia de dados, evoluindo gradualmente desde pipelines simples até arquiteturas mais robustas e próximas de ambientes produtivos.
+
