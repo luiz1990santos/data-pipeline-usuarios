@@ -27,16 +27,6 @@ def caminho_bronze_clientes():
     return caminho
 
 
-def caminho_silver_clientes():
-
-    caminho = BASE_DIR / "data" / "silver"
-    caminho.mkdir(parents=True, exist_ok=True)
-
-    return caminho
-
-
-
-
 def caminho_log():
 
     caminho = BASE_DIR / "log" 
