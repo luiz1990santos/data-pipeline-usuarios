@@ -20,6 +20,7 @@ insert = transformacao_clientes(import_clientes)
 
 insert_db(insert)
 
+# insert_db(r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\bronze\2026-07-27T18-01-07-users.csv")
 
 
 arquivos_gerados = atualizar_processados()
