@@ -15,7 +15,7 @@ def conexao_api_clientes():
 
             # Conf os parâmetros da requisição (opcional)
             params = {
-                'results': 20,  # Quantidade de usuários
+                'results': 100,  # Quantidade de usuários
                 'nat': 'br'    # Nacionalidade
             }
 
