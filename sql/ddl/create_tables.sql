@@ -12,6 +12,7 @@
 -- DROP TABLE STAGING_USERS
 
 CREATE TABLE STAGING_USERS(
+    run_id VARCHAR(50),
     id VARCHAR(50), 	
     first_name VARCHAR(50),	
     last_name VARCHAR(50),	
@@ -29,6 +30,7 @@ CREATE TABLE STAGING_USERS(
     registration_date VARCHAR(50),	
     regist_age VARCHAR(50),
     created_at VARCHAR(50)
+    
 
 ) ;
 
@@ -39,6 +41,7 @@ CREATE TABLE STAGING_USERS(
 -- SP_HELP SILVER_USERS
 
 CREATE TABLE SILVER_USERS (
+    run_id VARCHAR(50) NOT NULL,
     ID VARCHAR(50) PRIMARY KEY NOT NULL, 	
     first_name VARCHAR(50) NOT NULL,	
     last_name VARCHAR(50) NOT NULL,	
@@ -56,7 +59,6 @@ CREATE TABLE SILVER_USERS (
     registration_date DATE NOT NULL,	
     regist_age INT NOT NULL,
     created_at DATE NOT NULL
-
 ) ;
 
 
@@ -72,54 +74,57 @@ CREATE TABLE SILVER_USERS (
 
 
 WITH ORIGEM_FILTRADA AS (
-    SELECT *,
-           -- Cria um ranking para cada ID. O número 1 será o registro mais recente (ou o primeiro encontrado)
-           ROW_NUMBER() OVER (PARTITION BY id ORDER BY created_at DESC) as RN
-    FROM STAGING_USERS
-)
-MERGE SILVER_USERS AS DESTINO 
--- Agora usamos a CTE filtrada como origem, pegando apenas o registro único (RN = 1)
-USING (SELECT * FROM ORIGEM_FILTRADA WHERE RN = 1) AS ORIGEM
-ON (DESTINO.ID = ORIGEM.ID)
+                        SELECT *,
+                            -- Cria um ranking para cada ID. O número 1 será o registro mais recente (ou o primeiro encontrado)
+                            ROW_NUMBER() OVER (PARTITION BY id ORDER BY created_at DESC) as RN
+                        FROM STAGING_USERS
+                        WHERE RUN_ID = (SELECT MAX(RUN_ID) FROM STAGING_USERS)
+                    )
+                    MERGE SILVER_USERS AS DESTINO 
+                    -- Agora usamos a CTE filtrada como origem, pegando apenas o registro único (RN = 1)
+                    USING (SELECT * FROM ORIGEM_FILTRADA WHERE RN = 1) AS ORIGEM
+                    ON (DESTINO.ID = ORIGEM.ID)
 
-WHEN NOT MATCHED THEN 
-	INSERT( id, 	
-            first_name,	
-            last_name,	
-            gender,	
-            email,	
-            street,	
-            number,	
-            city,	
-            state,	
-            country,	
-            latitude,	
-            longitude,	
-            date_of_birth,	
-            age,	
-            registration_date,	
-            regist_age,
-            created_at)
-    
-    VALUES( ORIGEM.id, 	
-            ORIGEM.first_name,	
-            ORIGEM.last_name,	
-            ORIGEM.gender,	
-            ORIGEM.email,	
-            ORIGEM.street,	
-            ORIGEM.number,	
-            ORIGEM.city,	
-            ORIGEM.state,	
-            ORIGEM.country,	
-            ORIGEM.latitude,	
-            ORIGEM.longitude,	
-            ORIGEM.date_of_birth,	
-            ORIGEM.age,	
-            ORIGEM.registration_date,	
-            ORIGEM.regist_age,
-            ORIGEM.created_at)
-            
-;
+                    WHEN NOT MATCHED THEN 
+                        INSERT( run_id,
+                                id, 	
+                                first_name,	
+                                last_name,	
+                                gender,	
+                                email,	
+                                street,	
+                                number,	
+                                city,	
+                                state,	
+                                country,	
+                                latitude,	
+                                longitude,	
+                                date_of_birth,	
+                                age,	
+                                registration_date,	
+                                regist_age,
+                                created_at  )
+                        
+                        VALUES( ORIGEM.run_id,
+                                ORIGEM.id, 	
+                                ORIGEM.first_name,	
+                                ORIGEM.last_name,	
+                                ORIGEM.gender,	
+                                ORIGEM.email,	
+                                ORIGEM.street,	
+                                ORIGEM.number,	
+                                ORIGEM.city,	
+                                ORIGEM.state,	
+                                ORIGEM.country,	
+                                ORIGEM.latitude,	
+                                ORIGEM.longitude,	
+                                ORIGEM.date_of_birth,	
+                                ORIGEM.age,	
+                                ORIGEM.registration_date,	
+                                ORIGEM.regist_age,
+                                ORIGEM.created_at   )
+                                
+                    ;
 
 
 
