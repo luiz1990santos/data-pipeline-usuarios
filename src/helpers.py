@@ -63,3 +63,15 @@ def data_registro():
     return data_atual
 
 
+def run_id():
+    timestamp_int = int(datetime.datetime.now().timestamp())
+
+    data_formatada = datetime.datetime.fromtimestamp(timestamp_int).strftime('%Y%m%d_%H%M%S')
+
+    run_id = f'run_{data_formatada}'
+
+    return run_id
+
+
+
+# print(run_id())
