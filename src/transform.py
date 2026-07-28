@@ -1,6 +1,6 @@
 import pandas as pd
 import json
-from helpers import caminho_bronze_clientes, data_arquivo, data_registro
+from helpers import caminho_bronze_clientes, data_arquivo, data_registro, run_id
 from logger import log
 
 
@@ -9,6 +9,8 @@ data_arquivo = data_arquivo()
 data_registro = data_registro()
 
 caminho_bronze = caminho_bronze_clientes()
+
+run_id = run_id()
 
 def transformacao_clientes(arquivo):
     try:
@@ -27,6 +29,7 @@ def transformacao_clientes(arquivo):
 
         for usuario in usuarios:
             usuario_transformado = {
+                "run_id": run_id,
                 "id": usuario.get("login", {}).get("uuid"),
                 "first_name": usuario.get("name", {}).get("first"),
                 "last_name": usuario.get("name", {}).get("last"),
@@ -61,9 +64,9 @@ def transformacao_clientes(arquivo):
 
 
 
-# teste = transformacao_clientes()
+#teste = transformacao_clientes()
 
-# print(teste)
+#print(teste)
 
 # dataset = pd.json_normalize(teste)
 
