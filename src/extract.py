@@ -29,7 +29,7 @@ def conexao_api_clientes():
             data = str()
             
             # REQUESICAO NA API POR GET
-            response = requests.get(url, params=params, headers=headers)
+            response = requests.get(url, params=params, headers=headers, timeout=10)
             
             # Conversão a resposta para JSON
             data = response.json()
