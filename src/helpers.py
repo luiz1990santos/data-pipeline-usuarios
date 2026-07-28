@@ -1,5 +1,6 @@
 import datetime 
 from pathlib import Path
+from uuid import uuid4
 
 """
 
@@ -64,11 +65,7 @@ def data_registro():
 
 
 def run_id():
-    timestamp_int = int(datetime.datetime.now().timestamp())
-
-    data_formatada = datetime.datetime.fromtimestamp(timestamp_int).strftime('%Y%m%d_%H%M%S')
-
-    run_id = f'run_{data_formatada}'
+    run_id = f"run_{uuid4().hex}"
 
     return run_id
 
