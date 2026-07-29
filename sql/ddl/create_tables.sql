@@ -18,6 +18,7 @@ CREATE TABLE STAGING_USERS(
     last_name VARCHAR(50),	
     gender VARCHAR(50),	
     email VARCHAR(50),	
+    cpf VARCHAR(50), 
     street VARCHAR(50),	
     number VARCHAR(50),	
     city VARCHAR(50),	
@@ -40,13 +41,22 @@ CREATE TABLE STAGING_USERS(
 
 -- SP_HELP SILVER_USERS
 
+/*
+SELECT
+    COLUMN_NAME,
+    DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'SILVER_USERS';
+*/
+
 CREATE TABLE SILVER_USERS (
     run_id VARCHAR(50) NOT NULL,
-    ID VARCHAR(50) PRIMARY KEY NOT NULL, 	
+    id VARCHAR(50) PRIMARY KEY NOT NULL, 	
     first_name VARCHAR(50) NOT NULL,	
     last_name VARCHAR(50) NOT NULL,	
     gender VARCHAR(50) NULL,	
-    email VARCHAR(50) NOT NULL,	
+    email VARCHAR(50) NOT NULL,
+    cpf VARCHAR(50) NOT NULL UNIQUE,	
     street VARCHAR(50) NOT NULL,	
     number INT NOT NULL,	
     city VARCHAR(50) NOT NULL,	
@@ -58,10 +68,10 @@ CREATE TABLE SILVER_USERS (
     age INT NOT NULL,	
     registration_date DATE NOT NULL,	
     regist_age INT NOT NULL,
-    created_at DATE NOT NULL
+    created_at DATE  NOT NULL
 ) ;
 
-
+-- run_id,id,first_name,last_name,gender,email,cpf,street,number,city,state,country,latitude,longitude,date_of_birth,age,registration_date,regist_age,created_at
 
 
 
@@ -73,63 +83,65 @@ CREATE TABLE SILVER_USERS (
 -- DROP VIEW GOLD_USERS
 
 
-WITH ORIGEM_FILTRADA AS (
-                        SELECT *,
-                            -- Cria um ranking para cada ID. O número 1 será o registro mais recente (ou o primeiro encontrado)
-                            ROW_NUMBER() OVER (PARTITION BY id ORDER BY created_at DESC) as RN
-                        FROM STAGING_USERS
-                        WHERE RUN_ID = (SELECT MAX(RUN_ID) FROM STAGING_USERS)
-                    )
-                    MERGE SILVER_USERS AS DESTINO 
-                    -- Agora usamos a CTE filtrada como origem, pegando apenas o registro único (RN = 1)
-                    USING (SELECT * FROM ORIGEM_FILTRADA WHERE RN = 1) AS ORIGEM
-                    ON (DESTINO.ID = ORIGEM.ID)
+                      WITH ORIGEM_FILTRADA AS (
+                            SELECT *,
+                                -- Cria um ranking para cada ID. O número 1 será o registro mais recente (ou o primeiro encontrado)
+                                ROW_NUMBER() OVER (PARTITION BY id ORDER BY created_at DESC) as RN
+                            FROM STAGING_USERS
+                            WHERE RUN_ID = ?
+                        ) 
+                        MERGE SILVER_USERS AS DESTINO 
+                        -- Agora usamos a CTE filtrada como origem, pegando apenas o registro único (RN = 1)
+                        USING ( SELECT * FROM ORIGEM_FILTRADA
+                                WHERE RN = 1) AS ORIGEM
+                        ON (DESTINO.ID = ORIGEM.ID)
 
-                    WHEN NOT MATCHED THEN 
-                        INSERT( run_id,
-                                id, 	
-                                first_name,	
-                                last_name,	
-                                gender,	
-                                email,	
-                                street,	
-                                number,	
-                                city,	
-                                state,	
-                                country,	
-                                latitude,	
-                                longitude,	
-                                date_of_birth,	
-                                age,	
-                                registration_date,	
-                                regist_age,
-                                created_at  )
-                        
-                        VALUES( ORIGEM.run_id,
-                                ORIGEM.id, 	
-                                ORIGEM.first_name,	
-                                ORIGEM.last_name,	
-                                ORIGEM.gender,	
-                                ORIGEM.email,	
-                                ORIGEM.street,	
-                                ORIGEM.number,	
-                                ORIGEM.city,	
-                                ORIGEM.state,	
-                                ORIGEM.country,	
-                                ORIGEM.latitude,	
-                                ORIGEM.longitude,	
-                                ORIGEM.date_of_birth,	
-                                ORIGEM.age,	
-                                ORIGEM.registration_date,	
-                                ORIGEM.regist_age,
-                                ORIGEM.created_at   )
-                                
-                    ;
-
-
+                        WHEN NOT MATCHED THEN 
+                            INSERT( run_id,
+                                    id, 	
+                                    first_name,	
+                                    last_name,	
+                                    gender,	
+                                    email,
+                                    cpf,	
+                                    street,	
+                                    number,	
+                                    city,	
+                                    state,	
+                                    country,	
+                                    latitude,	
+                                    longitude,	
+                                    date_of_birth,	
+                                    age,	
+                                    registration_date,	
+                                    regist_age,
+                                    created_at  )
+                            
+                            VALUES( ORIGEM.run_id,
+                                    ORIGEM.id, 	
+                                    ORIGEM.first_name,	
+                                    ORIGEM.last_name,	
+                                    ORIGEM.gender,	
+                                    ORIGEM.email,
+                                    ORIGEM.cpf,	
+                                    ORIGEM.street,	
+                                    ORIGEM.number,	
+                                    ORIGEM.city,	
+                                    ORIGEM.state,	
+                                    ORIGEM.country,	
+                                    ORIGEM.latitude,	
+                                    ORIGEM.longitude,	
+                                    ORIGEM.date_of_birth,	
+                                    ORIGEM.age,	
+                                    ORIGEM.registration_date,	
+                                    ORIGEM.regist_age,
+                                    TRY_CONVERT(DATETIME2(0), ORIGEM.created_at, 120)   )
+                                    
+;
 
 /*
 
+-- DROP VIEW GOLD_USERS
 
 CREATE VIEW GOLD_USERS AS 
 
@@ -146,6 +158,7 @@ CREATE VIEW GOLD_USERS AS
                     ELSE 'Nâo informado'
                 END As GENERO,
                 EMAIL,
+                CPF,
                 STREET AS RUA,
                 NUMBER AS NUMERO_ENDERECO,
                 CITY AS CIDADE,
@@ -172,16 +185,17 @@ CREATE VIEW GOLD_USERS AS
 
     ) SELECT
             ID_CLIENTE,
-            CASE 
-                WHEN (IDADE - ANOS_CADASTRO) < 18 OR (IDADE - ANOS_CADASTRO) > 80 THEN 'BLOCKED'
-                ELSE 'ACTIVE'
-            END AS STATUS_CONTA,
-            IDADE - ANOS_CADASTRO AS IDADE_CADASTRO,
             NOME,
             SOBRENOME,
             NOME_COMPLETO,
             GENERO,
             EMAIL,
+            CPF,
+            CASE 
+                WHEN (IDADE - ANOS_CADASTRO) < 18 OR (IDADE - ANOS_CADASTRO) > 80 THEN 'BLOCKED'
+                ELSE 'ACTIVE'
+            END AS STATUS_CONTA,
+            IDADE - ANOS_CADASTRO AS IDADE_CADASTRO,            
             RUA,
             NUMERO_ENDERECO,
             CIDADE,
