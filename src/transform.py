@@ -1,8 +1,9 @@
 import pandas as pd
 import json
 from helpers import caminho_bronze_clientes, data_arquivo, data_registro, run_id
-from logger import log
+import logging
 
+logger = logging.getLogger(__name__)
 
 data_arquivo = data_arquivo()
 
@@ -12,7 +13,13 @@ caminho_bronze = caminho_bronze_clientes()
 
 run_id = run_id()
 
+
+
 def transformacao_clientes(arquivo):
+    # volume_csv = 0
+    logging.info('Execução: %s', run_id)
+    logging.info('Iniciando criação do CSV')
+
     try:
         caminho = str(caminho_bronze)
 
@@ -35,6 +42,7 @@ def transformacao_clientes(arquivo):
                 "last_name": usuario.get("name", {}).get("last"),
                 "gender": usuario.get("gender"),
                 "email": usuario.get("email"),
+                "cpf": usuario.get("id",{}).get("value"),
                 "street": usuario.get("location", {}).get("street", {}).get("name"),
                 "number": usuario.get("location", {}).get("street", {}).get("number"),
                 "city": usuario.get("location", {}).get("city"),
@@ -55,10 +63,20 @@ def transformacao_clientes(arquivo):
 
         arquivo_saida = f"{caminho}/{nome_arquivo}-users.csv"
 
+        arq = f"{nome_arquivo}-users.csv"
+
         json_normalizado.to_csv(arquivo_saida, index = False)
-        log("INFO", f"Arquivo {data_arquivo}-users.csv criado com Sucesso", "transform")
+
+        registros_csv = len(usuarios_transformados)
+
+        if not registros_csv or registros_csv <= 0:
+            logging.error('Arquivo criado vazio')
+        else:
+            logging.info('CSV criado com sucesso - Registros: %d', registros_csv)
+            logging.info('Arquivos gerado: "%s"', arq)
+
     except Exception as e:
-        log("ERROR", f"erro inesperado: {type(e).__name__}, {e}", "transform")       
+        logging.error(f"erro inesperado: {type(e).__name__}")       
 
     return arquivo_saida
 
