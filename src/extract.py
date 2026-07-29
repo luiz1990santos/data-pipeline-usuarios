@@ -1,57 +1,67 @@
 
 import requests 
 import os
-from logger import log
+import logging
+from uuid import uuid4
 # from .logger import log
 
-
+logger = logging.getLogger(__name__)
 
 def conexao_api_clientes():
 
         try:
-
             url = 'https://randomuser.me/api/'
 
 
             # Conf os parâmetros da requisição (opcional)
-            params = {
-                'results': 100,  # Quantidade de usuários
-                'nat': 'br'    # Nacionalidade
-            }
+            params = { 
+                       'results': 100,  # Quantidade de usuários
+                       'nat': 'br'    # Nacionalidade 
+                     }
 
             # Config cabeçalho com a chave de API
-            headers = {
-                #'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
-            }
+            headers = { #'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json' 
+                      }
 
+            logging.info('Iniciado a extração')
+            #logging.debug("URL da chamada: ", url)
+            #logging.debug('Parametros: ', params)
 
             data = str()
-            
+           
             # REQUESICAO NA API POR GET
             response = requests.get(url, params=params, headers=headers, timeout=10)
             
             # Conversão a resposta para JSON
             data = response.json()
 
-            user = data.get("results", [])
+            users = data.get("results", [])
+
+            registros = len(users)
 
             if response.status_code == 200:
                 # CONDICAO CASO A API NÃO ESTEJA RETORNANDO DADOS 
-                if len(user) == 0:
-                    log("WARNING", "API retornou lista vazia", "extract")
+                if registros == 0:
+                    logging.warning("API retornou lista vazia")
                     
                 else:
-                    log("INFO", "Iniciando extração", "extract")
+                    logging.info('Extração Concluída - Registros: %d', registros)
                     
             else:
                 data = None 
-                log("ERROR", "API Sem retorno", "extract")            
+                logging.error("API Sem retorno")            
+
         except Exception as e:
-            log("ERROR", f"Erro inesperado: {type(e).__name__}, {e}", "extract")
+            logging.error(f"Erro inesperado: {type(e).__name__}, {e}")
             return None
 
-           
+        except requests.Timeout:
+             logging.error('Tempo limite excedido da API')
+
+        except requests.RequestException:
+             logging.exception('Erro durante a extração')
+             raise            
 
         return data
 
