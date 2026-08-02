@@ -1,4 +1,5 @@
 import logging
+import time
 from logging_config import configurar_logging
 from extract import conexao_api_clientes
 from load import importar_json_clientes, atualizar_processados
@@ -8,24 +9,26 @@ from load_sql import insert_db
 
 logger = logging.getLogger(__name__)
 
+#testes = r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\raw\2026-07-31T20-06-34-users.json"
+
 def main():
+     inicio = time.perf_counter()
      configurar_logging()
 
      logging.info('Pipeline iniciado')
-
 
      raw = conexao_api_clientes()
 
      import_clientes = importar_json_clientes(raw)
 
-
      if raw and len(raw.get("results", [])) > 0:
           import_clientes 
 
-     # print(import_clientes)
+          # print(import_clientes)
+
+     #insert = transformacao_clientes(testes)
 
      insert = transformacao_clientes(import_clientes)
-
 
      insert_db(insert)
 
@@ -37,7 +40,9 @@ def main():
      arquivos_gerados = atualizar_processados()
 
      logging.info('Status: Sucesso')
-
+     fim = time.perf_counter()
+     tempo_execucao = fim - inicio
+     logging.info("Execução: %.2f segundos", tempo_execucao)
 if __name__ == "__main__":
      main()
 

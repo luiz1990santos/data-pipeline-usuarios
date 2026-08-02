@@ -13,11 +13,11 @@
 
 CREATE TABLE STAGING_USERS(
     run_id VARCHAR(50),
-    id VARCHAR(50), 	
+    id VARCHAR(50) NULL, 	
     first_name VARCHAR(50),	
     last_name VARCHAR(50),	
     gender VARCHAR(50),	
-    email VARCHAR(50),	
+    email VARCHAR(50) NULL,	
     cpf VARCHAR(50), 
     street VARCHAR(50),	
     number VARCHAR(50),	
@@ -26,11 +26,12 @@ CREATE TABLE STAGING_USERS(
     country VARCHAR(50),	
     latitude VARCHAR(50),	
     longitude VARCHAR(50),	
-    date_of_birth VARCHAR(50),	
+    date_of_birth VARCHAR(50) NULL,	
     age VARCHAR(50),	
     registration_date VARCHAR(50),	
     regist_age VARCHAR(50),
-    created_at VARCHAR(50)
+    created_at VARCHAR(50),
+    validacao VARCHAR(10)
     
 
 ) ;
@@ -68,7 +69,8 @@ CREATE TABLE SILVER_USERS (
     age INT NOT NULL,	
     registration_date DATE NOT NULL,	
     regist_age INT NOT NULL,
-    created_at DATE  NOT NULL
+    created_at DATE  NOT NULL,
+    validacao VARCHAR(10) NOT NULL
 ) ;
 
 -- run_id,id,first_name,last_name,gender,email,cpf,street,number,city,state,country,latitude,longitude,date_of_birth,age,registration_date,regist_age,created_at

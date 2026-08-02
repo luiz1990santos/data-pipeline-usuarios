@@ -7,9 +7,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 def insert_db(csv): 
+
     logging.info('Acesso ao DB')
     df = pd.read_csv(fr'{csv}')
-    # print(df)
+    #print(df)
 
     run_id = df['run_id'].drop_duplicates()[0]
 
@@ -32,7 +33,11 @@ def insert_db(csv):
     # for row in cursor:
         # print(row)
 
-    data = list(df.itertuples(index=False, name=None))
+
+    data = [
+                tuple(None if pd.isna(valor) else valor for valor in linha)
+                for linha in df.itertuples(index=False, name=None)
+            ]
 
     cursor.executemany("""
         INSERT INTO STAGING_USERS ( run_id,
@@ -53,9 +58,10 @@ def insert_db(csv):
                                     age, 
                                     registration_date, 
                                     regist_age, 
-                                    created_at)
+                                    created_at,
+                                    validacao)
                        
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                        
     """, data)
 
@@ -65,7 +71,7 @@ def insert_db(csv):
                                 -- Cria um ranking para cada ID. O número 1 será o registro mais recente (ou o primeiro encontrado)
                                 ROW_NUMBER() OVER (PARTITION BY id ORDER BY created_at DESC) as RN
                             FROM STAGING_USERS
-                            WHERE RUN_ID = ?
+                            WHERE RUN_ID = ? AND VALIDACAO = 'OK'
                         ) 
                         MERGE SILVER_USERS AS DESTINO 
                         -- Agora usamos a CTE filtrada como origem, pegando apenas o registro único (RN = 1)
@@ -92,7 +98,8 @@ def insert_db(csv):
                                     age,	
                                     registration_date,	
                                     regist_age,
-                                    created_at  )
+                                    created_at,
+                                    validacao  )
                             
                             VALUES( ORIGEM.run_id,
                                     ORIGEM.id, 	
@@ -112,7 +119,8 @@ def insert_db(csv):
                                     ORIGEM.age,	
                                     ORIGEM.registration_date,	
                                     ORIGEM.regist_age,
-                                    TRY_CONVERT(DATETIME2(0), ORIGEM.created_at, 120)   )
+                                    TRY_CONVERT(DATETIME2(0), ORIGEM.created_at, 120),
+                                    ORIGEM.validacao   )
                                     
                         ;
 
@@ -134,9 +142,22 @@ def insert_db(csv):
         cursor.execute(qry_silver, run_id)
         registros_silver = cursor.fetchall()[0][0]
 
-        logging.info('Insert STAGING_USERS - Registros: %d', registros_staging)
-        logging.info('Insert SILVER_USERS - Registros: %d', registros_silver)
+        qry_staging_invalidos = f"""SELECT COUNT(*) FROM STAGING_USERS WHERE RUN_ID = ? and VALIDACAO = 'NOK';"""
 
+        cursor.execute(qry_staging_invalidos, run_id)
+        registros_staging_invalidos = cursor.fetchall()[0][0]
+
+        qry_silver_IDS = f"""SELECT COUNT(distinct ID) FROM SILVER_USERS WHERE RUN_ID = ? and VALIDACAO = 'OK';"""
+
+        cursor.execute(qry_silver_IDS, run_id)
+        ids_distintos = cursor.fetchall()[0][0]                
+
+        invalidos = registros_staging_invalidos  
+                         
+
+        logging.info('Insert STAGING_USERS - Registros: %d', registros_staging)
+        logging.info('Insert SILVER_USERS - Registros: %d', ids_distintos)
+        logging.info('Insert SILVER_USERS - Ignorados: %d', invalidos)
 
     except Exception as erro:
         logging.error(f"erro inesperado: {type(erro).__name__}") 

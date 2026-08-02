@@ -46,7 +46,7 @@ def conexao_api_clientes():
                     logging.warning("API retornou lista vazia")
                     
                 else:
-                    logging.info('Extração Concluída - Registros: %d', registros)
+                    logging.info('Recebidos API: %d', registros)
                     
             else:
                 data = None 
