@@ -1,16 +1,17 @@
 
 import requests 
-import os
+# import os
 import logging
 from uuid import uuid4
 # from .logger import log
 
 logger = logging.getLogger(__name__)
 
+
 def conexao_api_clientes():
 
-        try:
-            url = 'https://randomuser.me/api/'
+     try:
+            url = 'https://randomuser.me/api'
 
 
             # Conf os parâmetros da requisição (opcional)
@@ -27,18 +28,20 @@ def conexao_api_clientes():
             logging.info('Iniciado a extração')
             #logging.debug("URL da chamada: ", url)
             #logging.debug('Parametros: ', params)
-
-            data = str()
            
             # REQUESICAO NA API POR GET
             response = requests.get(url, params=params, headers=headers, timeout=10)
-            
+
+            # Falha se HTTP for 4xx ou 5xx
+            response.raise_for_status()     
+
             # Conversão a resposta para JSON
             data = response.json()
+            #print(data)
 
             users = data.get("results", [])
-
             registros = len(users)
+
 
             if response.status_code == 200:
                 # CONDICAO CASO A API NÃO ESTEJA RETORNANDO DADOS 
@@ -50,20 +53,38 @@ def conexao_api_clientes():
                     
             else:
                 data = None 
-                logging.error("API Sem retorno")            
+                logging.error("API Sem retorno")   
 
-        except Exception as e:
-            logging.error(f"Erro inesperado: {type(e).__name__}, {e}")
-            return None
+            return data             
 
-        except requests.Timeout:
-             logging.error('Tempo limite excedido da API')
+     except requests.JSONDecodeError as e:
+          logging.error("Erro ao converter JSON: %s", e)
+          raise
 
-        except requests.RequestException:
-             logging.exception('Erro durante a extração')
-             raise            
+     except requests.ConnectTimeout:
+          logging.error("Timeout na conexão")
+          raise
 
-        return data
+     except requests.Timeout:
+          logging.error("Tempo limite excedido da API")
+          raise
+
+     except requests.HTTPError:
+          logging.error("HTTP Error")
+          raise
+
+     except requests.ConnectionError:
+          logging.error("Erro na conexão")
+          raise
+
+     except requests.RequestException:
+          logging.error("Erro durante a extração")
+          raise
+
+     except Exception as e:
+          logging.error("Erro inesperado: %s, %s", type(e).__name__, e)
+          raise
+                
 
 
 

@@ -117,9 +117,11 @@ def transformacao_clientes(arquivo):
 
     except UnboundLocalError:
         logging.error(f"Não foi possivel acessar a variável local")
+        raise
 
     except Exception as e:
         logging.error(f"erro inesperado: {type(e).__name__}")  
+        raise
 
     return arquivo_saida
 

@@ -9,19 +9,32 @@ logger = logging.getLogger(__name__)
 dt = data_arquivo()
 cm_clientes = caminho_raw_clientes()
 
+
+
 # print(cm)
 
 def importar_json_clientes(dados):
     # print(data_formatada)
    try:
+        # caminho = r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\raw\2026-07-31T20-13-14-users.json"
         caminho = f'{cm_clientes}/{dt}-users.json'
 
         with open(caminho, "w", encoding="utf-8") as f:
             json.dump(dados, f, indent=4, ensure_ascii=False)
         
         logging.info("JSON criado com Sucesso")
+
+   except NameError: 
+        logging.error(f"Variável/nome inexistente")
+        raise
+
+   except FileNotFoundError:
+        logging.exception("Caminho do arquivo não localizado")
+        raise
+
    except Exception as e:
         logging.error(f"erro inesperado: {type(e).__name__}, {e}")
+        raise
 
    return caminho
 

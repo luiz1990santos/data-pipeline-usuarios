@@ -9,40 +9,40 @@ from load_sql import insert_db
 
 logger = logging.getLogger(__name__)
 
-#testes = r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\raw\2026-07-31T20-06-34-users.json"
+# testes = r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\raw\2026-07-31T20-06-34-users.json"
 
 def main():
-     inicio = time.perf_counter()
-     configurar_logging()
+    inicio = time.perf_counter()
+    configurar_logging()
 
-     logging.info('Pipeline iniciado')
+    try:
+        logging.info("Pipeline iniciado")
 
-     raw = conexao_api_clientes()
+        raw = conexao_api_clientes()
 
-     import_clientes = importar_json_clientes(raw)
+        if not raw or not raw.get("results"):
+            raise RuntimeError("API não retornou dados válidos")
 
-     if raw and len(raw.get("results", [])) > 0:
-          import_clientes 
+        #import_clientes = importar_json_clientes(testes)  
 
-          # print(import_clientes)
+        import_clientes = importar_json_clientes(raw)
 
-     #insert = transformacao_clientes(testes)
+        insert = transformacao_clientes(import_clientes)
 
-     insert = transformacao_clientes(import_clientes)
+        insert_db(insert)
 
-     insert_db(insert)
+        atualizar_processados()
 
+        logging.info("Status: Sucesso")
 
-     # TESTE DE REPROCESSAMENTO
-     #insert_db(r"C:\Users\luiz_\OneDrive\Desktop\Engenharia_de_DadosV2\01-Projetos-2026\data-pipeline-usuarios\data\bronze\2026-07-27T20-53-22-users.csv")
+    except Exception:
+        logging.exception("Status: Erro")
+        raise
 
-
-     arquivos_gerados = atualizar_processados()
-
-     logging.info('Status: Sucesso')
-     fim = time.perf_counter()
-     tempo_execucao = fim - inicio
-     logging.info("Execução: %.2f segundos", tempo_execucao)
+    finally:
+        tempo_execucao = time.perf_counter() - inicio
+        logging.info("Execução: %.2f segundos", tempo_execucao)
+     
 if __name__ == "__main__":
      main()
 
