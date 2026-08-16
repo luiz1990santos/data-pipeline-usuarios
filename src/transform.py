@@ -1,7 +1,7 @@
 import pandas as pd
 import re
 import json
-from helpers import caminho_bronze_clientes, data_arquivo, data_registro, run_id
+from helpers import caminho_bronze_clientes, data_arquivo, data_registro
 import logging
 from datetime import datetime, date
 
@@ -13,13 +13,10 @@ data_registro = data_registro()
 
 caminho_bronze = caminho_bronze_clientes()
 
-run_id = run_id()
-
 PADRAO_EMAIL = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
-def transformacao_clientes(arquivo):
+def transformacao_clientes(arquivo, run_id):
     # volume_csv = 0
-    logging.info('Execução: %s', run_id)
     logging.info('Iniciando criação do CSV')
 
     try:

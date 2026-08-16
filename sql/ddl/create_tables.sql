@@ -230,3 +230,19 @@ CREATE VIEW GOLD_USERS AS
 
 
 -- SELECT * FROM GOLD_USERS
+
+
+
+
+
+----------------------------------------------------------
+-- TABELA PARA PERSISTIR OR LOGS - PIPELINE_RUNS
+----------------------------------------------------------
+CREATE TABLE PIPELINE_RUNS (
+    run_id VARCHAR(50) PRIMARY KEY NOT NULL,
+    started_at DATETIME2 NOT NULL,
+    finished_at DATETIME2 NULL,
+    status VARCHAR(20) NOT NULL,
+    duration_seconds DECIMAL(10,2) NULL,
+    error_message VARCHAR(1000) NULL
+);

@@ -4,17 +4,16 @@ import pandas as pd
 from dotenv import load_dotenv
 import logging
 
+
 logger = logging.getLogger(__name__)
 
-def insert_db(csv): 
+def insert_db(csv , run_id): 
     conexao = None
 
     try:
         logging.info('Acesso ao DB')
         df = pd.read_csv(fr'{csv}')
         #print(df)
-
-        run_id = df['run_id'].drop_duplicates()[0]
 
         # print(run_id)
 
@@ -205,9 +204,6 @@ def insert_db(csv):
 
         raise   
     
-
-
-
 
 
 

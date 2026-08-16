@@ -2,7 +2,6 @@
 import requests 
 # import os
 import logging
-from uuid import uuid4
 # from .logger import log
 
 logger = logging.getLogger(__name__)
@@ -87,6 +86,7 @@ def conexao_api_clientes():
                 
 
 
+     
 
 
 #Exibir o resultado (nome do usuário)
