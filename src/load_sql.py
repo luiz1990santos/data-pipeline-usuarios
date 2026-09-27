@@ -7,25 +7,53 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def conexao_sql():
+    logging.info('Acesso ao DB')
+
+    load_dotenv()
+    
+    driver = os.getenv("DB_DRIVER")
+    server = os.getenv("DB_SERVER")
+    database = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+
+    if user and password:
+
+        conexao = pyodbc.connect(
+            f"DRIVER={{{driver}}};"
+            f"SERVER={server};"
+            f"DATABASE={database};"
+            f"UID={user};"
+            f"PWD={password};"
+            f"Encrypt={os.getenv('DB_ENCRYPT', 'yes')};"
+            f"TrustServerCertificate={os.getenv('DB_TRUST_SERVER_CERTIFICATE', 'yes')};"
+        )
+
+    else:
+
+        conexao = pyodbc.connect(
+            f"DRIVER={{{driver}}};"
+            f"SERVER={server};"
+            f"DATABASE={database};"
+            f"Trusted_Connection={os.getenv('DB_TRUSTED')};"
+        )
+
+    return conexao
+    
+
+
+
 def insert_db(csv , run_id): 
     conexao = None
 
     try:
-        logging.info('Acesso ao DB')
+        conexao = conexao_sql()
+        
         df = pd.read_csv(fr'{csv}')
         #print(df)
 
         # print(run_id)
-
-        load_dotenv()
-
-        conexao = pyodbc.connect(
-            f"DRIVER={os.getenv('DB_DRIVER')};"
-            f"SERVER={os.getenv('DB_SERVER')};"
-            f"DATABASE={os.getenv('DB_NAME')};"
-            f"Trusted_Connection={os.getenv('DB_TRUSTED')};"
-        )
-
 
         cursor = conexao.cursor()
 
