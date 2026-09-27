@@ -3,8 +3,9 @@
 #from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
-import pyodbc
-import os
+from load_sql import conexao_sql
+#import pyodbc
+#import os
 
 """
     run = run_id()
@@ -32,15 +33,7 @@ def insert_pipeline_runs(lista_runs):
 
     print(df)
 
-    load_dotenv()
-
-    conexao = pyodbc.connect(
-        f"DRIVER={os.getenv('DB_DRIVER')};"
-        f"SERVER={os.getenv('DB_SERVER')};"
-        f"DATABASE={os.getenv('DB_NAME')};"
-        f"Trusted_Connection={os.getenv('DB_TRUSTED')};"
-    )
-
+    conexao = conexao_sql()
 
     cursor = conexao.cursor()
 
@@ -72,16 +65,7 @@ def update_pipeline_runs(lista_runs):
 
     print(df)
 
-    # RECOLOCAR O """ NO CURSOR!!!!!!
-
-    load_dotenv()
-
-    conexao = pyodbc.connect(
-        f"DRIVER={os.getenv('DB_DRIVER')};"
-        f"SERVER={os.getenv('DB_SERVER')};"
-        f"DATABASE={os.getenv('DB_NAME')};"
-        f"Trusted_Connection={os.getenv('DB_TRUSTED')};"
-    )
+    conexao = conexao_sql()
 
 
     cursor = conexao.cursor()
