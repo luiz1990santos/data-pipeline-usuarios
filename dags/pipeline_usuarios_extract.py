@@ -3,6 +3,7 @@ import pendulum
 from extract import conexao_api_clientes
 from load import importar_json_clientes
 from transform import transformacao_clientes
+from load_sql import insert_db
 from helpers import run_id
 
 
@@ -47,10 +48,25 @@ def pipeline_usuarios_extract():
        print(f"Arquivo Bronze: {caminho_bronze}")
        print(f"Run ID: {run_id_execucao}")
 
+       return {
+            "caminho_bronze": str(caminho_bronze),
+            "run_id": run_id_execucao
+        }
 
-    metadata = extract_raw()
 
-    transform_bronze(metadata)
+    @task
+    def load_sql(metadata):
+        caminho_bronze = metadata["caminho_bronze"]
+        run_id_execucao = metadata["run_id"]
+
+        insert_db(caminho_bronze, run_id_execucao)       
+
+
+    metadata_raw = extract_raw()
+
+    metadata_bronze = transform_bronze(metadata_raw)
+
+    load_sql(metadata_bronze)
     
 
 pipeline_usuarios_extract()
