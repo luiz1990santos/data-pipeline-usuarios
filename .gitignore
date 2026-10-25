@@ -7,3 +7,10 @@ data/raw/
 data/pipeline_state/
 data/bronze/
 venv/
+# Arquivos gerados pelo dbt
+target/
+dbt_packages/
+logs/
+# Credenciais e configuracoes locais
+profiles.yml
+.venv-dbt/
