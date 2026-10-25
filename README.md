@@ -1,216 +1,151 @@
 # Data Pipeline de Usuários
 
-Pipeline de dados desenvolvido em Python para extrair informações da Random User API, armazenar os dados brutos, aplicar validações, carregar os registros no SQL Server e disponibilizar uma camada analítica.
+Projeto de Engenharia de Dados e Analytics Engineering desenvolvido para praticar a construção e evolução de pipelines, desde a ingestão de dados até a preparação de modelos analíticos.
 
-O projeto começou como uma integração simples com API e vem sendo evoluído de forma incremental, com foco em práticas utilizadas em Engenharia de Dados, como rastreabilidade, controle de execução, qualidade de dados, idempotência, logs e separação em camadas.
+A aplicação consome dados fictícios da Random User API, realiza transformações e validações com Python, utiliza Apache Airflow para orquestração e SQL Server para persistência. O projeto também está sendo expandido para BigQuery e dbt, com foco em transformação SQL, qualidade de dados e modelagem analítica.
 
-## Arquitetura atual
+O desenvolvimento é incremental, permitindo aplicar novos conceitos sem descartar as implementações anteriores.
+
+## Arquitetura
+
+**Pipeline operacional — Python, Airflow e SQL Server**
 
 ```text
 Random User API
-        ↓
-Extração
-        ↓
-Raw — JSON original
-        ↓
-Transformação e validação
-        ↓
-Bronze — CSV com status OK/NOK
-        ↓
-Staging — todos os registros do lote
-        ↓
-Silver — somente registros válidos e únicos
-        ↓
-Gold — view com regras de negócio
+       |
+       v
+Apache Airflow
+       |
+       v
+Raw (JSON original)
+       |
+       v
+Transformação com Pandas
+       |
+       v
+Bronze (CSV - OK/NOK)
+       |
+       v
+SQL Server
+       |
+       +-- STAGING_USERS
+       |
+       +-- SILVER_USERS
+       |
+       +-- PIPELINE_RUNS
 ```
 
-## Como o pipeline funciona
-
-### 1. Extração
-
-O módulo de extração consulta a Random User API e solicita dados de usuários brasileiros.
-
-Nesta etapa são registrados:
-
-- início da chamada;
-- quantidade de registros recebidos;
-- retorno vazio;
-- erros de comunicação com a API.
-
-### 2. Persistência dos dados brutos
-
-A resposta da API é armazenada em JSON sem alterações.
-
-Essa camada preserva o dado original recebido da fonte e permite reprocessar uma execução sem realizar uma nova chamada à API.
-
-### 3. Transformação e validação
-
-Os dados do JSON são normalizados com Pandas e convertidos para uma estrutura tabular.
-
-Durante a transformação, são aplicadas validações básicas:
-
-- ID do usuário obrigatório;
-- formato mínimo de e-mail;
-- data de nascimento não pode estar no futuro.
-
-Cada registro recebe um status:
-
-- `OK`: registro aprovado para a camada Silver;
-- `NOK`: registro mantido para análise, mas impedido de avançar.
-
-Todos os registros são gravados em um único CSV, incluindo os dados válidos e inválidos.
-
-### 4. Carga no SQL Server
-
-O CSV é carregado inicialmente na tabela `STAGING_USERS`.
-
-A staging mantém todos os registros do lote, inclusive os classificados como `NOK`.
-
-Depois da carga, um `MERGE` envia para a `SILVER_USERS` apenas os registros que:
-
-- pertencem à execução atual;
-- possuem status `OK`;
-- ainda não existem na Silver.
-
-A tabela Silver utiliza o ID do usuário como chave primária, evitando duplicidades em reprocessamentos.
-
-### 5. Camada Gold
-
-A camada Gold é disponibilizada por meio de uma view no SQL Server.
-
-Ela aplica regras de negócio e tratamentos como:
-
-- nome completo;
-- tradução do gênero;
-- endereço completo;
-- cálculo atualizado da idade;
-- tempo de cadastro;
-- idade no momento do cadastro;
-- status da conta;
-- faixa etária.
-
-## Controle de execução
-
-Cada execução recebe um `run_id` gerado com UUID.
-
-O identificador acompanha os registros no CSV, na staging e na Silver, permitindo identificar em qual execução cada dado foi processado.
-
-Exemplo:
+**Ambiente analítico — BigQuery e dbt**
 
 ```text
-run_239389779ece44279c2affc007f5c7ac
+CSV Bronze
+    |
+    v
+Carga manual no BigQuery
+    |
+    v
+bronze_usuarios
+    |
+    v
+dbt - Staging
+    |
+    v
+stg_usuarios (View)
 ```
 
-O pipeline também registra métricas da execução, como:
+Atualmente, os dois fluxos estão separados. O Airflow executa o pipeline com SQL Server, enquanto o BigQuery recebe uma amostra do CSV para o desenvolvimento dos modelos dbt.
 
-- quantidade recebida da API;
-- registros válidos;
-- registros inválidos;
-- IDs distintos;
-- registros inseridos na staging;
-- registros inseridos na Silver;
-- registros rejeitados;
-- tempo total de execução;
-- status final.
-
-## Idempotência
-
-A carga da camada Silver é idempotente.
-
-Isso significa que o mesmo conjunto de dados pode ser processado novamente sem gerar usuários duplicados.
-
-A proteção acontece por meio de:
-
-- filtro pelo `run_id` atual;
-- deduplicação da origem com `ROW_NUMBER`;
-- comparação pelo ID do usuário;
-- `MERGE` com inserção somente de registros inexistentes;
-- chave primária na tabela Silver.
-
-A staging pode armazenar diferentes execuções do mesmo conjunto de dados, enquanto a Silver mantém apenas uma ocorrência de cada usuário.
-
-## Estrutura do projeto
-
-```text
-data-pipeline-usuarios/
-│
-├── data/
-│   ├── raw/                   # Respostas originais da API em JSON
-│   ├── bronze/                # Arquivos CSV transformados
-│   └── pipeline_state/        # Controle de arquivos processados
-│
-├── log/                       # Logs das execuções
-│
-├── sql/
-│   ├── ddl/
-│   │   └── create_tables.sql  # Criação das tabelas e estruturas
-│   │
-│   ├── dml/
-│   │   └── insert_users.sql
-│   │
-│   └── queries/
-│       └── qrys_tests.sql
-│
-├── src/
-│   ├── extract.py             # Extração da API
-│   ├── load.py                # Persistência do JSON e controle de arquivos
-│   ├── transform.py           # Normalização e validação
-│   ├── load_sql.py            # Carga na staging e Silver
-│   ├── logging_config.py      # Configuração centralizada de logs
-│   ├── helpers.py             # Funções auxiliares
-│   └── main.py                # Orquestração do pipeline
-│
-├── notebooks/
-├── requirements.txt
-├── .gitignore
-└── README.md
-```
-
-## Tecnologias utilizadas
-
-- Python
-- Pandas
-- Requests
-- PyODBC
-- SQL Server
-- Python Dotenv
-- Biblioteca Logging
-- UUID
-- Git e GitHub
+A integração automática com BigQuery está planejada para uma etapa posterior.
 
 ## Funcionalidades implementadas
 
-- Consumo de API REST;
-- persistência dos dados brutos em JSON;
-- transformação e normalização com Pandas;
-- geração de CSV;
-- validação de ID, e-mail e data de nascimento;
-- classificação dos registros em `OK` e `NOK`;
-- carga em lote no SQL Server;
-- arquitetura com staging, Silver e Gold;
-- carga idempotente com `MERGE`;
-- deduplicação por ID;
-- identificação da execução com `run_id`;
-- tratamento de valores nulos entre Pandas e SQL Server;
-- logs no terminal e em arquivo;
-- rotação dos arquivos de log;
-- métricas de execução;
-- controle de arquivos processados;
-- uso de variáveis de ambiente;
-- organização modular do código.
+### Ingestão e transformação
 
-## Configuração do ambiente
+A extração consulta a Random User API e armazena a resposta original em JSON na camada Raw.
 
-Crie um arquivo `.env` na raiz do projeto com as informações de conexão ao SQL Server:
+Os dados são normalizados com Pandas, convertidos para CSV e submetidos a validações de ID, formato de e-mail e data de nascimento. Cada registro recebe uma classificação `OK` ou `NOK`, preservando também os registros inválidos para análise.
 
-```env
-DB_DRIVER={ODBC Driver 18 for SQL Server}
-DB_SERVER=nome_do_servidor
-DB_NAME=ANALYTICS_HUB
-DB_TRUSTED=yes
+### Persistência no SQL Server
+
+Os dados são carregados inicialmente na `STAGING_USERS`, que mantém os registros dos lotes processados.
+
+Um `MERGE` insere na `SILVER_USERS` somente registros classificados como `OK` e ainda inexistentes pelo identificador do usuário. A combinação de deduplicação com `ROW_NUMBER`, comparação por ID e chave primária evita usuários duplicados na Silver.
+
+A Staging mantém o histórico das cargas e pode conter registros de diferentes execuções.
+
+### Orquestração e monitoramento
+
+O Apache Airflow coordena as etapas de extração, transformação, carga e finalização.
+
+Cada execução recebe um `run_id`, utilizado para rastrear o processamento entre as etapas.
+
+A tabela `PIPELINE_RUNS` registra o início, término, duração e status da execução (`RUNNING`, `SUCCESS` ou `ERROR`).
+
+O pipeline também possui tratamento de exceções, logs e recuperação automática de falhas transitórias na extração, com até duas novas tentativas.
+
+### Transformações com dbt
+
+O BigQuery contém a tabela `bronze_usuarios`, carregada inicialmente com uma amostra de 1.000 registros.
+
+O dbt utiliza essa tabela como Source e materializa o primeiro modelo, `stg_usuarios`, como uma view.
+
+O modelo realiza renomeação de colunas e conversão de tipos, preparando os dados para futuras transformações analíticas.
+
+A execução foi validada com 1.000 registros, 1.000 IDs distintos e campo de nascimento convertido para `DATE`.
+
+## Tecnologias
+
+| Tecnologia | Utilização |
+|---|---|
+| Python e Pandas | Extração, normalização e validação |
+| Apache Airflow | Orquestração e recuperação de falhas |
+| SQL Server | Staging, Silver e controle de execuções |
+| BigQuery | Armazenamento para análise na nuvem |
+| dbt Core | Transformações SQL e organização dos modelos |
+| Docker | Ambiente local do Airflow |
+| Git e GitHub | Versionamento e histórico de evolução |
+
+## Estrutura principal
+
+```text
+data-pipeline-usuarios/
+|
+|-- dags/
+|   `-- pipeline_usuarios_extract.py
+|
+|-- src/
+|   |-- extract.py
+|   |-- transform.py
+|   |-- load.py
+|   |-- load_sql.py
+|   |-- run_control.py
+|   `-- main.py
+|
+|-- data/
+|   |-- raw/
+|   `-- bronze/
+|
+|-- sql/
+|   |-- ddl/
+|   |-- dml/
+|   `-- qrys/
+|       `-- ae01_profile_staging.sql
+|
+|-- dbt_usuarios/
+|   |-- dbt_project.yml
+|   `-- models/
+|       `-- staging/
+|           |-- sources.yml
+|           `-- stg_usuarios.sql
+|
+|-- requirements.txt
+|-- .gitignore
+`-- README.md
 ```
 
-O arquivo `.env` não deve ser enviado ao GitHub.
+## Execução
+
+### Pipeline Python
 
 Instale as dependências:
 
@@ -218,60 +153,54 @@ Instale as dependências:
 pip install -r requirements.txt
 ```
 
-Crie as tabelas utilizando:
+Configure o `.env` com os parâmetros de conexão ao SQL Server e prepare as tabelas conforme `sql/ddl/create_tables.sql`.
 
-```text
-sql/ddl/create_tables.sql
-```
-
-Depois, execute o pipeline:
+Para execução local:
 
 ```bash
 python src/main.py
 ```
 
-## Exemplo de log
+O pipeline também pode ser executado pela DAG `pipeline_usuarios_extract` no ambiente Airflow configurado com Docker.
 
-```text
-2026-08-02 09:23:41 | INFO | main | Pipeline iniciado
-2026-08-02 09:23:42 | INFO | conexao_api_clientes | Recebidos API: 100
-2026-08-02 09:23:42 | INFO | transformacao_clientes | Válidos: 100
-2026-08-02 09:23:42 | WARNING | transformacao_clientes | Inválidos: 0
-2026-08-02 09:23:42 | INFO | insert_db | Insert STAGING_USERS - Registros: 100
-2026-08-02 09:23:42 | INFO | insert_db | Insert SILVER_USERS - Registros: 100
-2026-08-02 09:23:42 | INFO | main | Status: Sucesso
-2026-08-02 09:23:42 | INFO | main | Execução: 1.01 segundos
+### dbt e BigQuery
+
+Com o dbt instalado, as credenciais locais configuradas e a tabela de origem disponível no BigQuery, acesse:
+
+```bash
+cd dbt_usuarios
 ```
+
+Valide a conexão:
+
+```bash
+dbt debug
+```
+
+Execute o modelo:
+
+```bash
+dbt run --select stg_usuarios
+```
+
+O arquivo `profiles.yml` e as credenciais Google devem permanecer fora do repositório.
 
 ## Próximas evoluções
 
-As próximas melhorias serão adicionadas de forma incremental, sem alterar várias partes do pipeline ao mesmo tempo.
+O foco atual do projeto é Analytics Engineering. As próximas entregas serão direcionadas a:
 
-Entre os próximos passos estão:
+- Testes automatizados de qualidade com dbt;
+- documentação e dependências entre modelos com `ref()`;
+- modelagem analítica e construção de marts;
+- integração automática do pipeline com BigQuery;
+- melhorias de observabilidade e idempotência.
 
-- melhorar o tratamento de falhas entre as etapas;
-- interromper corretamente o pipeline quando uma etapa falhar;
-- registrar status de erro e duração até a falha;
-- ampliar as regras de qualidade de dados;
-- melhorar o controle de registros rejeitados;
-- criar testes automatizados;
-- avaliar orquestração com Airflow;
-- explorar processamento com Databricks e PySpark;
-- avaliar o uso de dbt na camada de transformação analítica.
+O desenvolvimento segue uma demanda por vez, com validação técnica e versionamento de cada entrega.
 
-## Objetivo do projeto
+## Objetivo
 
-O objetivo deste repositório é registrar a evolução prática de um pipeline de dados.
+Este repositório documenta minha evolução prática em Engenharia de Dados e Analytics Engineering.
 
-Mais do que consumir uma API, o projeto busca trabalhar problemas comuns de Engenharia de Dados, como:
+A proposta é consolidar conhecimentos de SQL, Python, orquestração, qualidade de dados e modelagem analítica, trabalhando problemas semelhantes aos encontrados em ambientes reais de dados.
 
-- reprocessamento;
-- dados inválidos;
-- duplicidade;
-- rastreabilidade;
-- falhas de execução;
-- qualidade de dados;
-- separação de responsabilidades;
-- organização em camadas.
-
-As melhorias são implementadas e documentadas gradualmente, preservando o histórico de evolução do projeto.
+O histórico de commits registra essa evolução, desde a integração inicial com API até a construção de uma arquitetura analítica utilizando BigQuery e dbt.
