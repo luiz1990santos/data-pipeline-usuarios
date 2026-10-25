@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: dev-smoke-512721-r5
+    schema: portfolio_ae
+    tables:
+      - name: bronze_usuarios
