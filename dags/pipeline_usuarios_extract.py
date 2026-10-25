@@ -1,6 +1,8 @@
 from airflow.sdk import dag, task, TriggerRule
 import pendulum
 from datetime import datetime
+from datetime import timedelta
+from airflow.sdk import get_current_context
 from run_control import runs_pipeline, insert_pipeline_runs, update_pipeline_runs
 from extract import conexao_api_clientes
 from load import importar_json_clientes
@@ -37,9 +39,12 @@ def pipeline_usuarios_extract():
         }
 
 
-    @task
+    @task(
+            retries = 2,
+            retry_delay = timedelta(seconds=30)
+    )
     def extract_raw(metadata_start):
-        run_id_execucao = metadata_start["run_id"]
+        run_id_execucao = metadata_start["run_id"]     
 
         dados = conexao_api_clientes()
         qtd_registro = dados.get("results", [])
@@ -60,8 +65,6 @@ def pipeline_usuarios_extract():
 
        caminho_raw = metadata["caminho_raw"]
        run_id_execucao = metadata["run_id"]
-
-       # raise RuntimeError("Falha controlada Airflow 11")
 
        caminho_bronze = transformacao_clientes(caminho_raw,run_id_execucao)
 
