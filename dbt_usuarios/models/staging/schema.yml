@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_usuarios
+    description: "Dados de usuários preparados para análise."
+    columns:
+      # Declare as colunas e seus testes aqui
+      - name: ID_USUARIO
+        data_tests:
+            - unique 
+            - not_null 
+      - name: VALIDACAO
+      
+        data_tests:
+            - accepted_values:
+                 arguments:
+                    values: ['OK','NOK']
+                    
