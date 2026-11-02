@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: dim_usuarios
+    description: "Dimensão de usuários válidos, com uma linha por usuário na amostra atual."
+    columns:
+      - name: ID_USUARIO
+        data_tests:
+            - unique 
+            - not_null 
+
+      
