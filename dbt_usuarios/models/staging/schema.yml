@@ -6,13 +6,18 @@ models:
     columns:
       # Declare as colunas e seus testes aqui
       - name: ID_USUARIO
+        description: "Identificador do usuário padronizado a partir da Bronze."
         data_tests:
             - unique 
             - not_null 
-      - name: VALIDACAO
       
+      - name: VALIDACAO
+        description: "Retorno das validações nos dados dos usuarios OK ou NOK."  
         data_tests:
             - accepted_values:
                  arguments:
                     values: ['OK','NOK']
+
+      - name: DATA_NASCIMENTO
+        description: "Data de nascimento convertida de TIMESTAMP para DATE."              
                     

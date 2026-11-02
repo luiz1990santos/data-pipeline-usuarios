@@ -1,12 +1,36 @@
+
 version: 2
 
 models:
   - name: dim_usuarios
-    description: "Dimensão de usuários válidos, com uma linha por usuário na amostra atual."
+    description: >
+      Dimensão analítica de usuários válidos.
+      Na amostra atual, representa uma linha por usuário,
+      identificado por ID_USUARIO.
+      Ainda não possui regra para selecionar a versão mais
+      recente quando houver múltiplas execuções.
+
     columns:
       - name: ID_USUARIO
+        description: "Identificador de negócio do usuário."
         data_tests:
-            - unique 
-            - not_null 
+          - unique
+          - not_null
 
-      
+      - name: NOME
+        description: "Primeiro nome do usuário."
+
+      - name: SOBRENOME
+        description: "Sobrenome do usuário."
+
+      - name: NOME_COMPLETO
+        description: "Nome e sobrenome concatenados na camada Intermediate."
+
+      - name: EMAIL
+        description: "Endereço de e-mail informado pela API."
+
+      - name: DATA_NASCIMENTO
+        description: "Data de nascimento convertida para DATE na Staging."
+
+      - name: RUN_ID
+        description: "Identificador da execução que originou o registro."

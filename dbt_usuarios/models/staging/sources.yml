@@ -2,7 +2,18 @@ version: 2
 
 sources:
   - name: bronze
+    description: "Dados recebidos do pipeline Python."
+
     database: dev-smoke-512721-r5
     schema: portfolio_ae
+
     tables:
       - name: bronze_usuarios
+        description: "Dados da camada Bronze carregados manualmente no BigQuery."
+
+        columns:
+          - name: id
+            description: "Identificador original do usuário."
+
+          - name: run_id
+            description: "Identificador da execução do pipeline."      

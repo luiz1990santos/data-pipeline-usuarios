@@ -1,0 +1,33 @@
+
+version: 2
+
+models:
+  - name: int_usuarios_validos
+    description: >
+      Modelo intermediário que seleciona registros válidos da Staging
+      e disponibiliza o nome completo dos usuários.
+
+    columns:
+      - name: ID_USUARIO
+        description: "Identificador de negócio do usuário."
+
+      - name: NOME
+        description: "Primeiro nome do usuário."
+
+      - name: SOBRENOME
+        description: "Sobrenome do usuário."
+
+      - name: NOME_COMPLETO
+        description: "Nome e sobrenome concatenados"
+
+      - name: EMAIL
+        description: "Endereço de e-mail informado pela API."
+
+      - name: DATA_NASCIMENTO
+        description: "Data de nascimento convertida para DATE na Staging."
+
+      - name: RUN_ID
+        description: "Identificador da execução que originou o registro."
+
+      - name: VALIDACAO
+        description: "Status de validação do registro, limitado a OK neste modelo."       
